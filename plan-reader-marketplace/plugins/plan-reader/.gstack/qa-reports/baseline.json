@@ -1,0 +1,9 @@
+{
+  "date": "2026-08-10",
+  "url": "templates/plan-viewer.html (big-plan.md fixture)",
+  "healthScore": 100,
+  "issues": [
+    { "id": "ISSUE-001", "title": "Player controls clipped off-screen at narrow widths", "severity": "medium", "category": "functional", "status": "fixed" }
+  ],
+  "categoryScores": { "console": 100, "links": 100, "visual": 100, "functional": 100, "ux": 100, "performance": 100, "content": 100, "accessibility": 100 }
+}
