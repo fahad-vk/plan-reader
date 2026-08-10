@@ -219,12 +219,17 @@ main.plan tbody tr:nth-child(even) { background: var(--surface-2); }
 /* ---- player bar (bottom) ------------------------------------------ */
 .player {
   position: fixed; bottom: 0; left: 0; right: 0; z-index: 45;
-  height: var(--player-h);
+  min-height: 4.5rem;
   background: var(--surface); border-top: 1px solid var(--border);
-  display: flex; align-items: center; gap: 0.6rem;
-  padding: 0 1.1rem;
+  display: flex; align-items: center; align-content: center; gap: 0.6rem;
+  padding: 0.5rem 1.1rem;
+  /* Wrap onto extra rows at narrow / split-screen widths so every control
+     stays fully visible instead of clipping the skip-code toggle off-screen.
+     JS keeps --player-h in sync with the actual (possibly wrapped) height so
+     the reading column's bottom padding always clears the bar. */
+  flex-wrap: wrap;
 }
-.player .group { display: flex; align-items: center; gap: 0.35rem; }
+.player .group { display: flex; align-items: center; gap: 0.35rem; flex: 0 0 auto; }
 .player .spacer { flex: 1; }
 .pbtn {
   font: inherit; cursor: pointer; color: var(--text);
@@ -508,6 +513,23 @@ main.plan tbody tr:nth-child(even) { background: var(--surface-2); }
   }
   window.addEventListener("scroll", updateProgress, { passive: true });
   updateProgress();
+
+  // Keep the reading column's bottom padding + TOC height in sync with the
+  // player bar's real height, which grows when the controls wrap onto extra
+  // rows at narrow widths. No feedback loop: --player-h drives content padding
+  // and TOC height only, never the player's own (literal min-height) size.
+  var playerEl = document.querySelector(".player");
+  function syncPlayerHeight() {
+    document.documentElement.style.setProperty("--player-h", playerEl.offsetHeight + "px");
+  }
+  syncPlayerHeight();
+  // ResizeObserver catches every height change — viewport resize, font load, and
+  // late voice-picker population that widens the bar into a wrapped state.
+  if ("ResizeObserver" in window) {
+    new ResizeObserver(syncPlayerHeight).observe(playerEl);
+  } else {
+    window.addEventListener("resize", syncPlayerHeight);
+  }
 
   // =================================================================
   // R2 — build the speakable transcript, decoupled from visual DOM.
