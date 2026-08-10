@@ -1,7 +1,7 @@
 {
   "name": "plan-reader",
-  "version": "0.1.0",
-  "description": "Captures the plan Claude Code presents at approval time and renders it in a self-contained, offline, accessible browser viewer with read-aloud (TTS), a sticky table-of-contents, and a command palette.",
+  "version": "0.2.0",
+  "description": "Captures the plan Claude Code presents at approval time — and renders any long content (plans, summaries, clarifications, markdown files) in a self-contained, offline, accessible browser viewer with read-aloud (TTS), a sticky table-of-contents, and a command palette.",
   "author": {
     "name": "muhammedfahad.vk"
   }

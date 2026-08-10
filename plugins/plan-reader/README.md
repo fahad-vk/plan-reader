@@ -16,6 +16,18 @@ announces code blocks instead of narrating raw characters.
 2. Run **`/readplan`** any time to open the most recently captured plan in the viewer
    (`scripts/open-viewer.js` fills the offline template and opens your browser).
 
+## Commands
+
+The viewer is content-agnostic — it renders any markdown, not just plans:
+
+| Command | Opens |
+|---------|-------|
+| `/readplan` | the most recently captured plan (from the `ExitPlanMode` hook) |
+| `/readlong` | your most recent long assistant response — read or listen to a big summary/clarification instead of scrolling the terminal |
+| `/readmd <file>` | any Markdown file you point at |
+
+All three open the same accessible viewer (TTS, sticky TOC, ⌘K palette).
+
 ## Install (local marketplace)
 
 From Claude Code:

@@ -98,3 +98,40 @@ test('idempotent: repeated runs produce identical content', () => {
     'same input yields byte-identical output',
   );
 });
+
+// --- --file / --label (powers /readmd and /readlong) --------------------
+
+test('--file renders an arbitrary markdown file without any capture', () => {
+  const dir = freshDataDir(); // deliberately empty — no latest-plan.md
+  const md = '# A long summary\n\nParagraph one.\n\n- point A\n- point B\n';
+  const mdPath = path.join(dir, 'summary.md');
+  fs.writeFileSync(mdPath, md);
+  const out = path.join(dir, 'out.html');
+  const res = runOpen(dir, ['--file', mdPath, '--out', out]);
+
+  assert.strictEqual(res.status, 0);
+  assert.ok(fs.existsSync(out), 'renders the given file even with no captured plan');
+  const html = fs.readFileSync(out, 'utf8');
+  const b64 = Buffer.from(md, 'utf8').toString('base64');
+  assert.ok(html.includes(b64), 'embeds the file content');
+  assert.match(html, /INJECTED_CWD\s*=\s*"summary\.md";/, 'labels the header with the file name');
+});
+
+test('--label overrides the header chip (used by /readlong)', () => {
+  const dir = freshDataDir();
+  const mdPath = path.join(dir, 'resp.md');
+  fs.writeFileSync(mdPath, '# Response\n\nBody.\n');
+  const out = path.join(dir, 'out.html');
+  runOpen(dir, ['--file', mdPath, '--label', 'Assistant response', '--out', out]);
+  const html = fs.readFileSync(out, 'utf8');
+  assert.match(html, /INJECTED_CWD\s*=\s*"Assistant response";/, 'label wins over file name');
+});
+
+test('--file with a missing path prints a message and writes no HTML', () => {
+  const dir = freshDataDir();
+  const out = path.join(dir, 'out.html');
+  const res = runOpen(dir, ['--file', path.join(dir, 'nope.md'), '--out', out]);
+  assert.strictEqual(res.status, 0);
+  assert.match(res.stdout, /could not read file/i);
+  assert.ok(!fs.existsSync(out), 'no HTML when the file is unreadable');
+});

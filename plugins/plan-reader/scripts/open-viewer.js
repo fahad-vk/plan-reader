@@ -4,17 +4,21 @@
 /*
  * open-viewer.js — the player.
  *
- * Reads the captured latest-plan.md + capture-status.json, fills the content
- * placeholders in the self-contained templates/plan-viewer.html, writes a
- * timestamped plan-<ts>.html, and opens it in the default browser.
+ * Fills the content placeholders in the self-contained templates/plan-viewer.html
+ * and opens the result in the default browser. Two sources:
+ *   - default: the captured plan (latest-plan.md + capture-status.json in the data dir)
+ *   - --file <path>: any markdown file (powers /readmd and /readlong — long summaries,
+ *     clarifications, or any doc, not just plans)
  *
  * Flags:
  *   --data <dir>   data dir (default: $CLAUDE_PLUGIN_DATA, else OS temp/plan-reader)
- *   --out <path>   explicit output path (default: <data>/plan-<ts>.html)
+ *   --file <path>  render this markdown file instead of the captured plan
+ *   --label <text> header chip label (defaults to cwd for plans, file name for --file)
+ *   --out <path>   explicit output HTML path
  *   --dry-run      build the HTML but do not launch a browser
  *   env PLAN_READER_NO_OPEN=1  same as --dry-run
  *
- * Fail-safe: no captured plan -> friendly message, exit 0, no browser, no HTML.
+ * Fail-safe: nothing to show -> friendly message, exit 0, no browser, no HTML.
  * A failed most-recent capture (ok=false) still opens the last good plan with a
  * visible "last capture failed" banner.
  */
@@ -25,12 +29,14 @@ const path = require('path');
 const { spawn } = require('child_process');
 
 function parseArgs(argv) {
-  const args = { dryRun: false, data: null, out: null };
+  const args = { dryRun: false, data: null, out: null, file: null, label: null };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--dry-run') args.dryRun = true;
     else if (a === '--data') args.data = argv[++i];
     else if (a === '--out') args.out = argv[++i];
+    else if (a === '--file') args.file = argv[++i];
+    else if (a === '--label') args.label = argv[++i];
   }
   if (process.env.PLAN_READER_NO_OPEN === '1') args.dryRun = true;
   return args;
@@ -100,24 +106,63 @@ function fillTemplate(template, planMd, cwd, ts, ok) {
     .split('"__CAPTURE_OK__"').join(ok ? 'true' : 'false');
 }
 
+const NO_PLAN_MSG = 'No plan captured yet. Approve or reject a plan in plan mode, then run /readplan.';
+
+// Resolve what to render into { md, cwd, ts, ok, outDir } — or null (with a
+// friendly message already printed) when there is nothing to show.
+function resolveSource(args) {
+  if (args.file) {
+    let md;
+    try {
+      md = fs.readFileSync(args.file, 'utf8');
+    } catch (_e) {
+      console.log('Could not read file: ' + args.file);
+      return null;
+    }
+    if (!md.trim()) {
+      console.log('File is empty: ' + args.file);
+      return null;
+    }
+    let ts = 'unknown';
+    try { ts = fs.statSync(args.file).mtime.toISOString(); } catch (_e) { /* keep unknown */ }
+    return {
+      md,
+      cwd: args.label || path.basename(args.file),
+      ts,
+      ok: true,
+      outDir: resolveDataDir(args.data),
+    };
+  }
+
+  // Default: the captured plan.
+  const dir = resolveDataDir(args.data);
+  let md;
+  try {
+    md = fs.readFileSync(path.join(dir, 'latest-plan.md'), 'utf8');
+  } catch (_e) {
+    console.log(NO_PLAN_MSG);
+    return null;
+  }
+  if (!md.trim()) {
+    console.log(NO_PLAN_MSG);
+    return null;
+  }
+  const status = readStatus(dir);
+  return {
+    md,
+    cwd: args.label || (status && status.cwd) || 'unknown',
+    ts: (status && status.ts) || 'unknown',
+    ok: !(status && status.ok === false),
+    outDir: dir,
+  };
+}
+
 function main() {
   const args = parseArgs(process.argv.slice(2));
-  const dir = resolveDataDir(args.data);
-  const planPath = path.join(dir, 'latest-plan.md');
   const templatePath = path.join(__dirname, '..', 'templates', 'plan-viewer.html');
 
-  // Fail-safe: nothing captured yet.
-  let planMd = '';
-  try {
-    planMd = fs.readFileSync(planPath, 'utf8');
-  } catch (_e) {
-    console.log('No plan captured yet. Approve or reject a plan in plan mode, then run /readplan.');
-    return 0;
-  }
-  if (!planMd.trim()) {
-    console.log('No plan captured yet. Approve or reject a plan in plan mode, then run /readplan.');
-    return 0;
-  }
+  const src = resolveSource(args);
+  if (!src) return 0; // message already printed
 
   let template;
   try {
@@ -127,14 +172,9 @@ function main() {
     return 0;
   }
 
-  const status = readStatus(dir);
-  const ok = !(status && status.ok === false);
-  const cwd = (status && status.cwd) || 'unknown';
-  const ts = (status && status.ts) || 'unknown';
+  const html = fillTemplate(template, src.md, src.cwd, src.ts, src.ok);
 
-  const html = fillTemplate(template, planMd, cwd, ts, ok);
-
-  const outPath = args.out || path.join(dir, 'plan-' + fileStamp() + '.html');
+  const outPath = args.out || path.join(src.outDir, 'plan-' + fileStamp() + '.html');
   try {
     fs.mkdirSync(path.dirname(outPath), { recursive: true });
     fs.writeFileSync(outPath, html);
@@ -143,7 +183,7 @@ function main() {
     return 0;
   }
 
-  if (!ok) {
+  if (!src.ok) {
     console.log('⚠ The most recent capture failed — opening the last good plan with a warning banner.');
   }
 
