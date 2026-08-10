@@ -6,7 +6,7 @@
   "type": "commonjs",
   "scripts": {
     "test": "node --test test/capture-plan.test.js test/open-viewer.test.js",
-    "test:a11y": "node --test test/a11y.test.js",
+    "test:a11y": "node --test test/a11y.test.js test/responsive.regression.test.js",
     "vendor": "node scripts/vendor-libs.js"
   },
   "devDependencies": {
