@@ -1,0 +1,23 @@
+{
+  "name": "plan-reader",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Capture the plan Claude Code presents at approval time and render it in a self-contained, offline, accessible browser viewer.",
+  "type": "commonjs",
+  "scripts": {
+    "test": "node --test test/capture-plan.test.js test/open-viewer.test.js",
+    "test:a11y": "node --test test/a11y.test.js",
+    "vendor": "node scripts/vendor-libs.js"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
+    "axe-core": "^4.13.0",
+    "highlight.js": "^11.11.1",
+    "jsdom": "^25.0.1",
+    "marked": "^14.1.4",
+    "playwright": "^1.62.1"
+  },
+  "dependencies": {
+    "@highlightjs/cdn-assets": "^11.11.1"
+  }
+}

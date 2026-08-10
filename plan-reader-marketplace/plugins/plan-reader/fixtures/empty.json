@@ -1,0 +1,7 @@
+{
+  "session_id": "empty-0000-0000-0000-000000000000",
+  "cwd": "/home/dev/projects/example-app",
+  "hook_event_name": "PermissionRequest",
+  "tool_name": "ExitPlanMode",
+  "tool_input": {}
+}

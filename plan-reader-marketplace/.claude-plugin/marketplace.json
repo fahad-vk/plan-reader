@@ -1,0 +1,13 @@
+{
+  "name": "plan-reader-marketplace",
+  "owner": {
+    "name": "muhammedfahad.vk"
+  },
+  "plugins": [
+    {
+      "name": "plan-reader",
+      "source": "./plugins/plan-reader",
+      "description": "Accessible, offline browser viewer for the plan Claude Code presents at approval time — read-aloud, sticky TOC, command palette."
+    }
+  ]
+}

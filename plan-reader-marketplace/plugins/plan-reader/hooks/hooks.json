@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PermissionRequest": [
+      {
+        "matcher": "ExitPlanMode",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/capture-plan.js\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

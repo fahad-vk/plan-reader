@@ -1,0 +1,10 @@
+{
+  "session_id": "b2c3d4e5-6789-4abc-def0-123456789abc",
+  "transcript_path": "/home/dev/.claude/projects/example/session.jsonl",
+  "cwd": "/home/dev/projects/example-app",
+  "hook_event_name": "PermissionRequest",
+  "tool_name": "ExitPlanMode",
+  "tool_input": {
+    "plan": "# Add rate limiting to the API\n\n## Context\nThe public API has no rate limiting. A single client can exhaust the connection pool.\n\n## Steps\n1. Add a token-bucket middleware in `src/middleware/rate-limit.js`.\n2. Wire it into the router before the auth layer.\n3. Add config: `RATE_LIMIT_RPM` (default 60).\n\n```js\nfunction tokenBucket({ capacity, refillPerSec }) {\n  let tokens = capacity;\n  let last = Date.now();\n  return () => {\n    const now = Date.now();\n    tokens = Math.min(capacity, tokens + (now - last) / 1000 * refillPerSec);\n    last = now;\n    if (tokens < 1) return false;\n    tokens -= 1;\n    return true;\n  };\n}\n```\n\n## Verification\n- Unit test the bucket refill math.\n- Hammer the endpoint with 100 req/s and confirm 429s after the limit.\n"
+  }
+}
