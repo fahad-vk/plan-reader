@@ -13,18 +13,19 @@ announces code blocks instead of narrating raw characters.
    It is a **passive recorder**: it reads the plan from stdin, writes it to
    `$CLAUDE_PLUGIN_DATA/latest-plan.md`, and **always exits 0 without emitting a
    decision** — your normal approve/reject prompt is completely untouched.
-2. Run **`/readplan`** any time to open the most recently captured plan in the viewer
+2. Run **`/read`** any time to open the most recently captured plan in the viewer
    (`scripts/open-viewer.js` fills the offline template and opens your browser).
 
-## Commands
+## The `/read` command
 
-The viewer is content-agnostic — it renders any markdown, not just plans:
+The viewer is content-agnostic — it renders any markdown, not just plans. One
+command, with an optional argument that picks the source:
 
-| Command | Opens |
-|---------|-------|
-| `/readplan` | the most recently captured plan (from the `ExitPlanMode` hook) |
-| `/readlong` | your most recent long assistant response — read or listen to a big summary/clarification instead of scrolling the terminal |
-| `/readmd <file>` | any Markdown file you point at |
+| Invocation | Opens |
+|------------|-------|
+| `/read` | the most recently captured plan (from the `ExitPlanMode` hook) |
+| `/read long` | your most recent long assistant response — read or listen to a big summary/clarification instead of scrolling the terminal |
+| `/read <file.md>` | any Markdown file you point at |
 
 All three open the same accessible viewer (TTS, sticky TOC, ⌘K palette).
 
@@ -76,8 +77,8 @@ The committed `templates/plan-viewer.html` is generated — edit
 
 ## Fail-safe guarantees
 
-1. `/readplan` with no capture → "no plan captured yet", no browser.
+1. `/read` with no capture → "no plan captured yet", no browser.
 2. Malformed / empty / unexpected-schema stdin → recorder exits 0, prior good plan preserved.
 3. Render/open failure → user-facing message, no crash.
-4. Repeated `/readplan` → idempotent (same input → identical HTML).
+4. Repeated `/read` → idempotent (same input → identical HTML).
 5. The `PermissionRequest` hook never returns a decision → approve/reject unaffected.

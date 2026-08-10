@@ -21,7 +21,8 @@ Node built-ins and the viewer's libraries are vendored inline.
 
 1. In **plan mode**, when Claude presents a plan at the approval prompt, a passive
    hook captures it (your approve/reject flow is untouched).
-2. Run **`/readplan`** to open that plan in the browser viewer.
+2. Run **`/read`** to open that plan in the browser viewer (or `/read long` for your
+   last long answer, `/read <file.md>` for any markdown file).
 
 ## Team auto-install
 
