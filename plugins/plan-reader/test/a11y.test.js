@@ -25,20 +25,18 @@ before(async () => {
   if (!chromium) return;
 
   // Build a fixture-filled viewer from big-plan.md via the real open-viewer.js.
+  // Rendered through the --file path so the a11y checks are independent of the
+  // transcript source.
   dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'plan-reader-a11y-'));
-  const md = fs.readFileSync(path.join(FIXTURES, 'big-plan.md'), 'utf8');
-  fs.writeFileSync(path.join(dataDir, 'latest-plan.md'), md);
-  fs.writeFileSync(
-    path.join(dataDir, 'capture-status.json'),
-    JSON.stringify({ ok: true, ts: '2026-08-10T12:00:00.000Z', cwd: '/home/dev/app' }),
-  );
   const outHtml = path.join(dataDir, 'viewer.html');
   const res = spawnSync(
     process.execPath,
-    [path.join(ROOT, 'scripts', 'open-viewer.js'), '--dry-run', '--data', dataDir, '--out', outHtml],
+    [path.join(ROOT, 'scripts', 'open-viewer.js'), '--dry-run',
+      '--file', path.join(FIXTURES, 'big-plan.md'), '--out', outHtml],
     { env: { ...process.env, PLAN_READER_NO_OPEN: '1' }, encoding: 'utf8' },
   );
   assert.strictEqual(res.status, 0, 'open-viewer built the fixture HTML');
+  assert.ok(fs.existsSync(outHtml), 'viewer HTML was written');
 
   htmlUrl = pathToFileURL(outHtml).href;
   browser = await chromium.launch();

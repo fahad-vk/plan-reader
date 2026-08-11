@@ -7,7 +7,7 @@
     {
       "name": "plan-reader",
       "source": "./plugins/plan-reader",
-      "description": "Accessible, offline browser viewer for the plan Claude Code presents at approval time — read-aloud, sticky TOC, command palette."
+      "description": "Accessible, offline browser viewer for long content — your last answer, the current plan, or any markdown file. Read-aloud, sticky TOC, command palette."
     }
   ]
 }

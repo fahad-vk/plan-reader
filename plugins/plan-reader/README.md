@@ -1,33 +1,37 @@
 # plan-reader
 
-Capture the plan Claude Code presents at approval time (`ExitPlanMode`) and render
-it in a **self-contained, offline, genuinely accessible** browser viewer — with
-read-aloud (TTS), a sticky table-of-contents, reading progress, and a ⌘K command
-palette. Built accessibility-first: full keyboard operation, ARIA landmarks + a live
-region, light/dark themes with checked contrast, and a "speakable transcript" that
+Render any long content — your last assistant answer, the plan Claude Code
+presented at approval time, or any markdown file — in a **self-contained,
+offline, genuinely accessible** browser viewer. Read-aloud (TTS), a sticky
+table-of-contents, reading progress, and a ⌘K command palette. Built
+accessibility-first: full keyboard operation, ARIA landmarks + a live region,
+light/dark themes with checked contrast, and a "speakable transcript" that
 announces code blocks instead of narrating raw characters.
 
 ## How it works
 
-1. A `PermissionRequest` hook matching `ExitPlanMode` runs `scripts/capture-plan.js`.
-   It is a **passive recorder**: it reads the plan from stdin, writes it to
-   `$CLAUDE_PLUGIN_DATA/latest-plan.md`, and **always exits 0 without emitting a
-   decision** — your normal approve/reject prompt is completely untouched.
-2. Run **`/read`** any time to open the most recently captured plan in the viewer
-   (`scripts/open-viewer.js` fills the offline template and opens your browser).
+There is **no capture step and no background hook**. When you run `/read`,
+`scripts/open-viewer.js` reads this project's Claude Code **session transcript**
+directly (`~/.claude/projects/<project>/<session>.jsonl`), extracts the content
+you asked for, fills the offline template, and opens your browser.
+
+Because the transcript is already scoped per-project and per-session, `/read`
+only ever shows **this** project's content — a plan or answer from another
+project can never leak in.
 
 ## The `/read` command
 
-The viewer is content-agnostic — it renders any markdown, not just plans. One
-command, with an optional argument that picks the source:
+One command; an optional argument picks the source. Bare `/read` is **dynamic**.
 
 | Invocation | Opens |
 |------------|-------|
-| `/read` | the most recently captured plan (from the `ExitPlanMode` hook) |
-| `/read long` | your most recent long assistant response — read or listen to a big summary/clarification instead of scrolling the terminal |
+| `/read` | the **freshest** of {your last substantial answer, a plan presented in this project} |
+| `/read plan` | the most recent plan presented in this project (`ExitPlanMode`) |
+| `/read long` (or `last`) | your most recent long assistant answer — read or listen instead of scrolling the terminal |
 | `/read <file.md>` | any Markdown file you point at |
 
-All three open the same accessible viewer (TTS, sticky TOC, ⌘K palette).
+All open the same accessible viewer (TTS, sticky TOC, ⌘K palette). If there's
+nothing to show, `/read` prints a short friendly reason instead of opening.
 
 ## Install (local marketplace)
 
@@ -38,14 +42,14 @@ From Claude Code:
 /plugin install plan-reader
 ```
 
-Node.js is required on your PATH (the hook and command run `node`).
+Node.js is required on your PATH (the command runs `node`).
 
 ## Development
 
 ```
 npm install          # dev deps: marked, highlight.js, jsdom, axe-core, playwright
 npm run vendor       # rebuild templates/plan-viewer.html from the skeleton + vendored libs
-npm test             # capture + open-viewer fail-safe suite (node:test)
+npm test             # resolver + open-viewer suites (node:test)
 npm run test:a11y    # axe-core + interaction checks in headless Chromium
 bash dev/run-local.sh        # or: pwsh dev/run-local.ps1  → builds .devout.html
 ```
@@ -54,31 +58,20 @@ Open `.devout.html` in a browser to exercise the viewer against a sample plan.
 The committed `templates/plan-viewer.html` is generated — edit
 `templates/plan-viewer.skeleton.html` and re-run `npm run vendor`.
 
-## ⚠ Two steps require a human (see the build plan)
-
-- **Step 1 — confirm the capture field path.** The exact JSON field holding the plan
-  markdown in an `ExitPlanMode` `PermissionRequest` payload is undocumented. The
-  recorder probes an ordered list of candidates (`tool_input.plan`,
-  `tool_input.plan_text`, `tool_input.markdown`, `plan`) and degrades to
-  `ok=false` — never a crash — if none match. **Capture one real payload and confirm
-  / trim `PLAN_TEXT_CANDIDATES` in `scripts/capture-plan.js`.** A throwaway dump hook:
-
-  ```json
-  { "hooks": { "PermissionRequest": [ { "matcher": "ExitPlanMode", "hooks": [
-    { "type": "command",
-      "command": "node -e \"const fs=require('fs');fs.writeFileSync(process.env.CLAUDE_PLUGIN_DATA+'/plan-payload.json', fs.readFileSync(0))\"" }
-  ] } ] } }
-  ```
-
-- **Step 0 / Step 7 — co-design and acceptance with the accessibility champion.**
-  Sit with the accessibility teammate, watch how they read a plan today, and get their
-  sign-off on a real long plan with a screen reader (NVDA on Windows at minimum) + TTS.
-  Their reaction is the validation — not the passing tests.
-
 ## Fail-safe guarantees
 
-1. `/read` with no capture → "no plan captured yet", no browser.
-2. Malformed / empty / unexpected-schema stdin → recorder exits 0, prior good plan preserved.
-3. Render/open failure → user-facing message, no crash.
-4. Repeated `/read` → idempotent (same input → identical HTML).
-5. The `PermissionRequest` hook never returns a decision → approve/reject unaffected.
+1. Nothing to read → a short friendly reason, no browser, exit 0.
+2. Malformed / partial transcript lines, a missing project folder, or a BOM →
+   degraded to a reason, never a crash (the resolver never throws).
+3. Content is read from the **invoking session** (`CLAUDE_CODE_SESSION_ID`), so a
+   second window open on the same project is never picked up by mistake.
+4. Render/open failure → user-facing message, no crash.
+5. Repeated `/read` → idempotent (same input → identical HTML).
+
+## Reading from Claude Code internals
+
+`/read` depends on the layout of Claude Code's session transcripts
+(`~/.claude/projects/*/*.jsonl`), which is an **undocumented internal** (stable
+in practice — it's how sessions resume). Every access is defensive; if the
+format ever changes, `/read` degrades to a friendly message rather than showing
+wrong or stale content.

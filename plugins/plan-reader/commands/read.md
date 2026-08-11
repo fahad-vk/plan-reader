@@ -1,43 +1,41 @@
 ---
-description: Open long content in the accessible viewer — the captured plan, your last long answer, or any markdown file.
-argument-hint: "[long | <path-to-markdown-file>]   (empty = captured plan)"
-allowed-tools: Write, Bash(node *)
+description: Open long content in the accessible viewer — your last answer, the plan, or any markdown file (dynamic by default).
+argument-hint: "[plan | long | <path-to-markdown-file>]   (empty = freshest of last answer / plan)"
+allowed-tools: Bash(node *)
 ---
 
 Open content in the plan-reader viewer (read-aloud TTS, sticky TOC, ⌘K palette).
 The user's argument is: `$ARGUMENTS`
 
-Pick ONE mode based on that argument, then run the matching command:
+The viewer is fed by `scripts/open-viewer.js`, which reads this project's Claude
+Code session transcript directly — no capture step. Pick ONE mode from the
+argument and run the matching command. Match the keyword after trimming
+surrounding whitespace and ignoring case (`Plan`, `plan `, `LONG` all count). Do
+not read, summarize, or re-render the content yourself; the viewer is the
+deliverable. Relay the script's output.
 
-**Mode A — captured plan** (argument is empty or the word `plan`):
-Run exactly:
+**Mode A — dynamic (argument is empty):**
+Opens the freshest of {your last substantial answer, a plan presented in this
+project}. Run exactly:
 ```
-node "${CLAUDE_PLUGIN_ROOT}/scripts/open-viewer.js"
+node "${CLAUDE_PLUGIN_ROOT}/scripts/open-viewer.js" --mode auto
 ```
-If it prints "No plan captured yet…", tell the user no plan has been captured — they
-need to reach a plan-approval prompt (plan mode) once, then run `/read` again.
 
-**Mode B — your most recent long answer** (argument is exactly `long` or `last`):
-1. Find the writable data dir:
-   ```
-   node -e "const os=require('os');process.stdout.write(process.env.CLAUDE_PLUGIN_DATA||os.tmpdir())"
-   ```
-   Call it `<DIR>`.
-2. With the Write tool, save your PREVIOUS substantial assistant response (the last
-   real answer before this `/read` command) to `<DIR>/latest-response.md`, **verbatim
-   and unmodified** as Markdown (keep headings, lists, code blocks, tables exactly).
-3. Run exactly:
-   ```
-   node "${CLAUDE_PLUGIN_ROOT}/scripts/open-viewer.js" --file "<DIR>/latest-response.md" --label "Assistant response"
-   ```
-If there is no prior substantial response, say so and do nothing.
+**Mode B — the plan** (argument is exactly `plan`):
+```
+node "${CLAUDE_PLUGIN_ROOT}/scripts/open-viewer.js" --mode plan
+```
 
-**Mode C — a markdown file** (argument is anything else — treat it as a file path):
-Run exactly:
+**Mode C — your most recent long answer** (argument is exactly `long` or `last`):
+```
+node "${CLAUDE_PLUGIN_ROOT}/scripts/open-viewer.js" --mode message
+```
+
+**Mode D — a markdown file** (argument is anything else — treat it as a path):
 ```
 node "${CLAUDE_PLUGIN_ROOT}/scripts/open-viewer.js" --file "$ARGUMENTS"
 ```
-If it prints "Could not read file …" or "File is empty …", relay that to the user.
 
-In all modes: relay the script's output and confirm the viewer opened. Do not read,
-summarize, or re-render the content yourself — the viewer is the deliverable.
+In every mode the script either opens the viewer or prints a short, friendly
+reason (e.g. "Nothing to read yet…", "No plan has been presented in this
+project yet.", "Could not read file …"). Relay that line to the user verbatim.

@@ -1,11 +1,11 @@
 {
   "name": "plan-reader",
-  "version": "0.1.0",
+  "version": "0.5.0",
   "private": true,
-  "description": "Capture the plan Claude Code presents at approval time and render it in a self-contained, offline, accessible browser viewer.",
+  "description": "Render long content (your last answer, the plan, or any markdown) in a self-contained, offline, accessible browser viewer, sourced from the Claude Code session transcript.",
   "type": "commonjs",
   "scripts": {
-    "test": "node --test test/capture-plan.test.js test/open-viewer.test.js",
+    "test": "node --test test/resolve-content.test.js test/open-viewer.test.js",
     "test:a11y": "node --test test/a11y.test.js test/responsive.regression.test.js",
     "vendor": "node scripts/vendor-libs.js"
   },

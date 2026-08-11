@@ -1812,8 +1812,9 @@ return Pe}()
   try { rawMarkdown = b64ToUtf8(planB64); }
   catch (e) { rawMarkdown = "# Could not decode plan\n\nThe captured plan could not be decoded."; }
 
-  // Strip the capture header comment (<!-- plan-reader capture ... -->)
-  // that capture-plan.js prepends, so it does not render as content.
+  // Legacy safeguard: strip a leading capture header comment
+  // (<!-- plan-reader capture ... -->) if present, so it never renders as
+  // content. Transcript-sourced content has no such header.
   rawMarkdown = rawMarkdown.replace(/^<!--\s*plan-reader capture[\s\S]*?-->\s*/, "");
 
   // ---- meta --------------------------------------------------------

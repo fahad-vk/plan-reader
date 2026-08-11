@@ -31,18 +31,15 @@ let browser, htmlUrl;
 before(async () => {
   if (!chromium) return;
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'plan-reader-resp-'));
-  fs.writeFileSync(path.join(dir, 'latest-plan.md'), fs.readFileSync(path.join(FIXTURES, 'big-plan.md')));
-  fs.writeFileSync(
-    path.join(dir, 'capture-status.json'),
-    JSON.stringify({ ok: true, ts: '2026-08-10T12:00:00.000Z', cwd: '/home/dev/app' }),
-  );
   const outHtml = path.join(dir, 'viewer.html');
   const res = spawnSync(
     process.execPath,
-    [path.join(ROOT, 'scripts', 'open-viewer.js'), '--dry-run', '--data', dir, '--out', outHtml],
+    [path.join(ROOT, 'scripts', 'open-viewer.js'), '--dry-run',
+      '--file', path.join(FIXTURES, 'big-plan.md'), '--out', outHtml],
     { env: { ...process.env, PLAN_READER_NO_OPEN: '1' }, encoding: 'utf8' },
   );
   assert.strictEqual(res.status, 0);
+  assert.ok(fs.existsSync(outHtml), 'viewer HTML was written');
   htmlUrl = pathToFileURL(outHtml).href;
   browser = await chromium.launch();
 });
