@@ -1,6 +1,6 @@
 {
   "name": "plan-reader",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "private": true,
   "description": "Render long content (your last answer, the plan, or any markdown) in a self-contained, offline, accessible browser viewer, sourced from the Claude Code session transcript.",
   "type": "commonjs",

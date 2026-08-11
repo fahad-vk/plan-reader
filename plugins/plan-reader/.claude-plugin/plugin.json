@@ -1,6 +1,6 @@
 {
   "name": "plan-reader",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Opens long content — your last assistant answer, the plan Claude Code presented, or any markdown file — in a self-contained, offline, accessible browser viewer with read-aloud (TTS), a sticky table-of-contents, and a command palette. Reads directly from the session transcript; no capture step.",
   "author": {
     "name": "muhammedfahad.vk"

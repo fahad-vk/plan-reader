@@ -91,25 +91,31 @@ function userText(obj) {
   return null;
 }
 
-function isCommandLine(obj) {
+// Harness-injected user-role lines that are NOT typed prompts: slash-command
+// wrappers, `!` bash-tool I/O, and local-command output/caveats. These carry
+// string content but must never count as "the user's last prompt".
+const SYNTHETIC_USER_RE = /^\s*<(command-(name|message|args)|local-command-(stdout|stderr|caveat)|bash-(input|stdout|stderr))>/;
+
+function isSyntheticUserLine(obj) {
   const t = userText(obj);
-  return typeof t === 'string' && /^\s*<command-(name|message|args)>/.test(t);
+  return typeof t === 'string' && SYNTHETIC_USER_RE.test(t);
 }
 
 // A genuine user prompt: real typed input, not a skill injection (isMeta) and
-// not a slash-command wrapper.
+// not a synthetic command/bash/local-command wrapper.
 function isGenuineUser(obj) {
   if (obj && obj.isMeta === true) return false;
   const t = userText(obj);
   if (typeof t !== 'string' || !t.trim()) return false;
-  return !isCommandLine(obj);
+  return !SYNTHETIC_USER_RE.test(t);
 }
 
-// Where the assistant's answer window ends: the next genuine prompt or the
-// /read command line. Skill injections (isMeta) and tool_result carriers are
-// transparent — they occur mid-turn and must not truncate the answer.
+// Where the assistant's answer window ends: the next genuine prompt or any
+// synthetic user line (slash command, bash run, local-command output). Skill
+// injections (isMeta) and tool_result carriers are transparent — they occur
+// mid-turn and must not truncate the answer.
 function isStopBoundary(obj) {
-  return isGenuineUser(obj) || isCommandLine(obj);
+  return isGenuineUser(obj) || isSyntheticUserLine(obj);
 }
 
 // Ordered content items of an assistant line: text pieces and tool markers.

@@ -230,6 +230,25 @@ test('a plan captured in a DIFFERENT project is never returned', () => {
   assert.doesNotMatch(auto.md, /rate limiting/, 'the stale demo plan must never appear');
 });
 
+// --- 2b: harness-injected command I/O is not a genuine prompt ---------------
+
+test('bash and local-command wrapper lines are not genuine user prompts', () => {
+  // The harness records `!` bash runs and slash-command output as user-role
+  // lines. They must not mask the real last answer (found via live dogfooding).
+  const synthetic = (content) => ({ type: 'user', message: { role: 'user', content }, timestamp: ts() });
+  const root = writeTranscript(SLUG, 's1', [
+    userMsg('the real question I typed'),
+    asstText(long('THE REAL ANSWER I want to read back')),
+    synthetic('<bash-input>ls -la</bash-input>'),
+    synthetic('<bash-stdout>total 0</bash-stdout>'),
+    synthetic('<local-command-stdout>✔ Updated plan-reader.</local-command-stdout>'),
+    commandLine('read'),
+  ]);
+  const r = resolveContent({ mode: 'message', projectDir: CWD, projectsRoot: root });
+  assert.strictEqual(r.ok, true, 'command I/O must not mask the real answer');
+  assert.match(r.md, /THE REAL ANSWER/);
+});
+
 // --- 6b: never-throws on a JSON-null line -----------------------------------
 
 test('a JSON-null transcript line is skipped and never throws', () => {
