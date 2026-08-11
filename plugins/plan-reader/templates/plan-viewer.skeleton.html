@@ -15,51 +15,61 @@
 </style>
 
 <style>
-/* ---- design tokens (light is the base; dark overrides) ------------- */
+/* ---- design tokens (light is the base; dark overrides) -------------
+   Warm-paper + teal palette ported from the "Plan Reader" design.
+   Fonts are OFFLINE system stacks: the real families (Source Serif 4,
+   IBM Plex Sans/Mono) render only if the user has them installed; the
+   viewer never fetches from the network. ----------------------------- */
 :root {
-  --bg: #fbfbfa;
+  --paper: #fbfaf7;
   --surface: #ffffff;
-  --surface-2: #f2f1ee;
-  --text: #1c1b19;
-  --text-muted: #55524c;
-  --border: #e3e1dc;
-  --accent: #7a4de8;
-  --accent-contrast: #ffffff;
-  --focus: #7a4de8;
-  --active-bg: #efe9ff;
-  --active-border: #7a4de8;
+  --surface-2: #f5f3ee;
+  --text: #1b1a17;
+  --text-muted: #5f5c55;
+  --border: #e6e3dc;
+  --border-2: #ddd8cf;
+  --accent: #0f6e62;
+  --accent-hi: #0a5049;
+  --accent-soft: #e2efec;
+  --on-accent: #fbfaf7;
+  --focus: #0f6e62;
+  --mark: #f7ecb8;
+  --danger: #b23a33;
   --banner-bg: #fff4e5;
   --banner-text: #7a4a00;
-  --reading-measure: 70ch;
-  --rail: 17rem;
-  --player-h: 4.5rem;
-  --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-read: Georgia, "Iowan Old Style", "Times New Roman", serif;
-  --font-mono: "SFMono-Regular", "Cascadia Code", Consolas, "Liberation Mono", monospace;
+  --reading-measure: 46rem;
+  --rail: 18rem;
+  --player-h: 0px;
+  --font-read: "Source Serif 4", Georgia, "Iowan Old Style", "Times New Roman", serif;
+  --font-ui: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "IBM Plex Mono", "SFMono-Regular", "Cascadia Code", Consolas, "Liberation Mono", monospace;
   color-scheme: light;
 }
 :root[data-theme="dark"] {
-  --bg: #16151a;
-  --surface: #1e1d24;
-  --surface-2: #26242e;
-  --text: #eceaf2;
-  --text-muted: #a7a3b3;
-  --border: #34313d;
-  --accent: #b79cff;
-  --accent-contrast: #16151a;
-  --focus: #b79cff;
-  --active-bg: #2c2640;
-  --active-border: #b79cff;
+  --paper: #15171a;
+  --surface: #1b1e22;
+  --surface-2: #23272c;
+  --text: #eceae5;
+  --text-muted: #a6a29a;
+  --border: #2c3036;
+  --border-2: #363b41;
+  --accent: #5fcbbb;
+  --accent-hi: #8fe0d3;
+  --accent-soft: #123330;
+  --on-accent: #10221f;
+  --focus: #5fcbbb;
+  --mark: #3a3416;
+  --danger: #e8837b;
   --banner-bg: #3a2e12;
   --banner-text: #ffd591;
   color-scheme: dark;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #16151a; --surface: #1e1d24; --surface-2: #26242e;
-    --text: #eceaf2; --text-muted: #a7a3b3; --border: #34313d;
-    --accent: #b79cff; --accent-contrast: #16151a; --focus: #b79cff;
-    --active-bg: #2c2640; --active-border: #b79cff;
+    --paper: #15171a; --surface: #1b1e22; --surface-2: #23272c;
+    --text: #eceae5; --text-muted: #a6a29a; --border: #2c3036; --border-2: #363b41;
+    --accent: #5fcbbb; --accent-hi: #8fe0d3; --accent-soft: #123330; --on-accent: #10221f;
+    --focus: #5fcbbb; --mark: #3a3416; --danger: #e8837b;
     --banner-bg: #3a2e12; --banner-text: #ffd591;
     color-scheme: dark;
   }
@@ -68,12 +78,13 @@
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
 body {
-  background: var(--bg);
+  background: var(--paper);
   color: var(--text);
   font-family: var(--font-ui);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
+::selection { background: var(--accent-soft); }
 
 /* ---- accessibility helpers ---------------------------------------- */
 .visually-hidden {
@@ -84,197 +95,300 @@ body {
   white-space: nowrap; border: 0;
 }
 :focus-visible {
-  outline: 3px solid var(--focus);
+  outline: 2px solid var(--focus);
   outline-offset: 2px;
-  border-radius: 4px;
+  border-radius: 6px;
 }
 .skip-link {
-  position: absolute; left: 0.5rem; top: -3rem;
-  background: var(--accent); color: var(--accent-contrast);
-  padding: 0.5rem 0.85rem; border-radius: 6px; z-index: 100;
+  position: absolute; left: 0.75rem; top: -3.5rem;
+  background: var(--accent); color: var(--on-accent);
+  padding: 0.55rem 0.9rem; border-radius: 8px; z-index: 100;
+  font-size: 0.82rem; text-decoration: none;
   transition: top 0.15s ease;
 }
-.skip-link:focus { top: 0.5rem; }
+.skip-link:focus { top: 0.75rem; }
 
-/* ---- reading progress bar (P2) ------------------------------------ */
+/* ---- reading progress bar ----------------------------------------- */
 #progress-bar {
-  position: fixed; top: 0; left: 0; height: 3px; width: 0%;
-  background: var(--accent); z-index: 50;
-  transition: width 0.1s linear;
+  position: fixed; top: 0; left: 0; height: 2px; width: 0%;
+  background: var(--accent); z-index: 60;
+  transition: width 0.09s linear;
 }
 
 /* ---- header ------------------------------------------------------- */
 header.app-header {
-  position: sticky; top: 0; z-index: 40;
-  background: var(--surface);
+  position: sticky; top: 0; z-index: 50;
+  background: var(--paper);
   border-bottom: 1px solid var(--border);
-  padding: 0.7rem 1.1rem;
-  display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;
+  padding: 0.72rem 1.5rem;
+  display: flex; align-items: center; gap: 0.9rem; flex-wrap: wrap;
 }
+.header-title { display: flex; align-items: baseline; gap: 0.7rem; min-width: 0; }
 header.app-header h1 {
-  font-size: 1.05rem; margin: 0; font-weight: 650;
-  letter-spacing: -0.01em;
+  font-size: 0.95rem; margin: 0; font-weight: 600;
+  letter-spacing: -0.01em; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; max-width: 42vw;
 }
-.header-meta { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-left: auto; align-items: center; }
-.chip {
-  font-size: 0.78rem; color: var(--text-muted);
-  background: var(--surface-2); border: 1px solid var(--border);
-  padding: 0.2rem 0.55rem; border-radius: 999px; white-space: nowrap;
+#crumb {
+  font-size: 0.82rem; color: var(--text-muted); white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
 }
-.chip.mono { font-family: var(--font-mono); }
+.header-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-left: auto; align-items: center; }
 .hbtn {
-  font: inherit; font-size: 0.82rem;
-  background: var(--surface-2); color: var(--text);
-  border: 1px solid var(--border); border-radius: 8px;
-  padding: 0.35rem 0.6rem; cursor: pointer;
+  font: inherit; font-size: 0.82rem; line-height: 1;
+  background: var(--surface); color: var(--text);
+  border: 1px solid var(--border-2); border-radius: 8px;
+  padding: 0.5rem 0.75rem; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  transition: border-color 0.12s ease, color 0.12s ease, background 0.12s ease;
 }
-.hbtn:hover { border-color: var(--accent); }
+.hbtn:hover { border-color: var(--accent); color: var(--accent); }
+.hbtn.primary {
+  background: var(--accent); color: var(--on-accent); border-color: var(--accent);
+}
+.hbtn.primary:hover { background: var(--accent-hi); border-color: var(--accent-hi); color: var(--on-accent); }
+.hbtn .kbd {
+  font-family: var(--font-mono); font-size: 0.72rem; opacity: 0.75;
+}
 
-/* ---- capture-failed banner (P2) ----------------------------------- */
+/* ---- capture-failed banner ---------------------------------------- */
 #capture-banner {
   background: var(--banner-bg); color: var(--banner-text);
   border-bottom: 1px solid var(--border);
-  padding: 0.6rem 1.1rem; font-size: 0.9rem;
+  padding: 0.7rem 1.5rem; font-size: 0.88rem; line-height: 1.5;
 }
 #capture-banner[hidden] { display: none; }
+#capture-banner code { font-family: var(--font-mono); font-size: 0.82rem; }
 
 /* ---- three-zone layout -------------------------------------------- */
 .layout {
   display: grid;
   grid-template-columns: var(--rail) minmax(0, 1fr);
   align-items: start;
+  max-width: 84rem; margin: 0 auto;
 }
 nav.toc {
-  position: sticky; top: 3.4rem;
+  position: sticky; top: 3.3rem;
   align-self: start;
-  height: calc(100vh - 3.4rem - var(--player-h));
+  height: calc(100vh - 3.3rem);
   overflow-y: auto;
-  padding: 1rem 0.6rem 1rem 1rem;
-  border-right: 1px solid var(--border);
+  padding: 1.6rem 1.2rem 2rem 1.5rem;
+  display: flex; flex-direction: column; gap: 1.15rem;
 }
+.toc-search { position: relative; }
+.toc-search .icon {
+  position: absolute; left: 0.7rem; top: 50%; transform: translateY(-50%);
+  font-size: 0.8rem; color: var(--text-muted); pointer-events: none;
+}
+#toc-search {
+  width: 100%; font: inherit; font-size: 0.82rem; color: var(--text);
+  background: var(--surface); border: 1px solid var(--border-2);
+  border-radius: 8px; padding: 0.55rem 0.6rem 0.55rem 1.9rem; outline: none;
+}
+#toc-search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.toc-contents { display: flex; flex-direction: column; gap: 0.1rem; }
 nav.toc h2 {
-  font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em;
-  color: var(--text-muted); margin: 0 0 0.6rem 0.4rem;
+  font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.09em;
+  color: var(--text-muted); font-weight: 600; margin: 0 0 0.55rem 0.6rem;
 }
 nav.toc ol { list-style: none; margin: 0; padding: 0; }
 nav.toc a {
-  display: block; text-decoration: none; color: var(--text-muted);
-  padding: 0.28rem 0.5rem; border-radius: 6px; font-size: 0.87rem;
-  border-left: 2px solid transparent; line-height: 1.35;
+  display: flex; align-items: baseline; gap: 0.6rem;
+  text-decoration: none; color: var(--text-muted);
+  padding: 0.42rem 0.6rem; border-radius: 8px; font-size: 0.84rem;
+  line-height: 1.4; transition: background 0.12s ease, color 0.12s ease;
 }
+nav.toc a .num {
+  font-variant-numeric: tabular-nums; font-size: 0.72rem;
+  color: var(--text-muted); width: 1.1rem; flex: none;
+}
+nav.toc a .label { flex: 1; min-width: 0; }
 nav.toc a:hover { background: var(--surface-2); color: var(--text); }
 nav.toc a[aria-current="true"] {
-  color: var(--text); background: var(--active-bg);
-  border-left-color: var(--active-border); font-weight: 600;
+  color: var(--accent); background: var(--accent-soft); font-weight: 600;
 }
-nav.toc a.lvl-3 { padding-left: 1.3rem; font-size: 0.82rem; }
-nav.toc a.lvl-4 { padding-left: 2rem; font-size: 0.8rem; }
+nav.toc a[aria-current="true"] .num { color: var(--accent); }
+nav.toc a.lvl-3 { padding-left: 1.4rem; font-size: 0.8rem; }
+nav.toc a.lvl-4 { padding-left: 2.1rem; font-size: 0.78rem; }
+#toc-empty { font-size: 0.82rem; color: var(--text-muted); padding: 0.6rem; line-height: 1.5; }
+#toc-empty[hidden] { display: none; }
+.toc-foot {
+  margin-top: auto; border-top: 1px solid var(--border); padding-top: 1rem;
+  display: flex; flex-direction: column; gap: 0.5rem;
+}
+.toc-foot .read {
+  font-size: 0.78rem; color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.toc-foot .cwd {
+  font-size: 0.72rem; color: var(--text-muted);
+  font-family: var(--font-mono); word-break: break-all; line-height: 1.5;
+}
 
-.reading-wrap { padding: 1.5rem 2rem calc(var(--player-h) + 2rem); min-width: 0; }
+/* ---- reading column ----------------------------------------------- */
+.reading-wrap { padding: 2.4rem 3rem calc(var(--player-h) + 3rem) 2.6rem; min-width: 0; }
+.eyebrow {
+  font-size: 0.78rem; color: var(--text-muted); letter-spacing: 0.01em;
+  margin: 0 auto 1.1rem; max-width: var(--reading-measure);
+}
 main.plan {
   max-width: var(--reading-measure);
   margin: 0 auto;
   font-family: var(--font-read);
-  font-size: 1.06rem;
+  font-size: 1.14rem;
 }
-main.plan h1 { font-size: 1.9rem; line-height: 1.2; margin: 0 0 1rem; letter-spacing: -0.02em; }
-main.plan h2 { font-size: 1.4rem; margin: 2rem 0 0.75rem; padding-top: 0.5rem; border-top: 1px solid var(--border); }
-main.plan h3 { font-size: 1.15rem; margin: 1.5rem 0 0.5rem; }
-main.plan h4 { font-size: 1.02rem; margin: 1.2rem 0 0.4rem; }
-main.plan p, main.plan li { line-height: 1.7; }
-main.plan a { color: var(--accent); }
+main.plan h1 {
+  font-size: 2.5rem; line-height: 1.12; margin: 0 0 1rem;
+  letter-spacing: -0.022em; font-weight: 600;
+}
+main.plan h2 {
+  font-size: 0.95rem; font-weight: 600; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--accent);
+  font-family: var(--font-ui);
+  margin: 3rem 0 1rem; padding-top: 0;
+}
+main.plan h3 { font-size: 1.3rem; margin: 1.9rem 0 0.6rem; letter-spacing: -0.01em; }
+main.plan h4 { font-size: 1.1rem; margin: 1.4rem 0 0.45rem; }
+main.plan p, main.plan li { line-height: 1.7; text-wrap: pretty; }
+main.plan > p:first-of-type { font-size: 1.24rem; color: var(--text-muted); line-height: 1.55; }
+main.plan a { color: var(--accent); text-underline-offset: 2px; }
+main.plan a:hover { color: var(--accent-hi); }
 main.plan blockquote {
-  margin: 1rem 0; padding: 0.4rem 1rem; border-left: 3px solid var(--accent);
-  color: var(--text-muted); background: var(--surface-2); border-radius: 0 6px 6px 0;
+  margin: 1.2rem 0; padding: 0.5rem 1.1rem; border-left: 3px solid var(--accent);
+  color: var(--text-muted); background: var(--surface-2); border-radius: 0 8px 8px 0;
 }
 main.plan code:not(.hljs) {
-  font-family: var(--font-mono); font-size: 0.88em;
-  background: var(--surface-2); padding: 0.1rem 0.35rem; border-radius: 4px;
+  font-family: var(--font-mono); font-size: 0.86em;
+  background: var(--surface-2); padding: 0.12rem 0.38rem; border-radius: 5px;
 }
+/* Code card: a mono bar (language + copy) sits above the highlighted block. */
+.code-wrap {
+  margin: 1.3rem 0; border: 1px solid var(--border); border-radius: 12px;
+  overflow: hidden; background: var(--surface);
+}
+.code-bar {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.5rem 0.85rem; border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+}
+.code-bar .code-lang {
+  font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted);
+  letter-spacing: 0.03em;
+}
+.code-bar .spacer { flex: 1; }
+.code-copy {
+  font: inherit; font-size: 0.74rem; cursor: pointer;
+  background: transparent; color: var(--text);
+  border: 1px solid var(--border-2); border-radius: 6px; padding: 0.25rem 0.55rem;
+}
+.code-copy:hover { border-color: var(--accent); color: var(--accent); }
 main.plan pre {
-  border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
-  background: transparent; padding: 0;
-  font-family: var(--font-mono); font-size: 0.86rem; line-height: 1.5;
+  border: 0; border-radius: 0; overflow: hidden;
+  background: transparent; padding: 0; margin: 0;
+  font-family: var(--font-mono); font-size: 0.84rem; line-height: 1.6;
 }
 main.plan pre code { font-family: inherit; }
-/* Let the a11y hljs theme paint its own contrast-tuned background (#fefefe /
-   #2b2b2b) on the code element; that scrollable code element is made
-   keyboard-focusable in JS (axe: scrollable-region-focusable). */
-main.plan pre code.hljs { border-radius: 8px; }
+/* The a11y hljs theme paints its own contrast-tuned background on the code
+   element; that scrollable code element is made keyboard-focusable in JS. */
+main.plan pre code.hljs { border-radius: 0; }
 main.plan table {
-  border-collapse: collapse; width: 100%; margin: 1rem 0;
-  font-size: 0.92rem; display: block; overflow-x: auto;
+  border-collapse: collapse; width: 100%; margin: 1.2rem 0;
+  font-size: 0.92rem; font-family: var(--font-ui); display: block; overflow-x: auto;
 }
-main.plan th, main.plan td { border: 1px solid var(--border); padding: 0.45rem 0.7rem; text-align: left; }
-main.plan th { background: var(--surface-2); font-weight: 650; }
+main.plan th, main.plan td { border: 1px solid var(--border); padding: 0.5rem 0.75rem; text-align: left; }
+main.plan th { background: var(--surface-2); font-weight: 600; }
 main.plan tbody tr:nth-child(even) { background: var(--surface-2); }
+main.plan hr { border: 0; border-top: 1px solid var(--border); margin: 2.4rem 0; }
 
 /* highlight-as-read target */
 .tts-active {
-  background: var(--active-bg);
-  box-shadow: 0 0 0 3px var(--active-bg);
+  background: var(--mark);
+  box-shadow: 0 0 0 4px var(--mark);
   border-radius: 3px;
 }
 
-/* ---- player bar (bottom) ------------------------------------------ */
+/* ---- read-aloud player (bottom, slide-up) ------------------------- */
 .player {
-  position: fixed; bottom: 0; left: 0; right: 0; z-index: 45;
-  min-height: 4.5rem;
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 55;
   background: var(--surface); border-top: 1px solid var(--border);
-  display: flex; align-items: center; align-content: center; gap: 0.6rem;
-  padding: 0.5rem 1.1rem;
-  /* Wrap onto extra rows at narrow / split-screen widths so every control
-     stays fully visible instead of clipping the skip-code toggle off-screen.
-     JS keeps --player-h in sync with the actual (possibly wrapped) height so
-     the reading column's bottom padding always clears the bar. */
-  flex-wrap: wrap;
+  box-shadow: 0 -8px 28px rgba(0,0,0,0.08);
+  transform: translateY(100%); visibility: hidden;
+  /* Animate only the slide; flip visibility instantly so controls are
+     focusable the moment the player opens (no mid-transition focus race). */
+  transition: transform 0.22s cubic-bezier(0.2,0.8,0.2,1);
 }
-.player .group { display: flex; align-items: center; gap: 0.35rem; flex: 0 0 auto; }
-.player .spacer { flex: 1; }
+.player.open { transform: translateY(0); visibility: visible; }
+.player-inner {
+  max-width: 84rem; margin: 0 auto;
+  display: flex; align-items: center; gap: 0.9rem;
+  padding: 0.7rem 1.5rem; flex-wrap: wrap;
+}
+.player .group { display: flex; align-items: center; gap: 0.4rem; flex: 0 0 auto; }
 .pbtn {
-  font: inherit; cursor: pointer; color: var(--text);
-  background: var(--surface-2); border: 1px solid var(--border);
-  border-radius: 8px; padding: 0.4rem 0.7rem; min-width: 2.5rem;
-  display: inline-flex; align-items: center; justify-content: center; gap: 0.3rem;
+  font: inherit; font-size: 0.82rem; cursor: pointer; color: var(--text);
+  background: var(--surface-2); border: 1px solid var(--border-2);
+  border-radius: 8px; padding: 0.45rem 0.7rem; min-width: 2.4rem;
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem;
+  transition: border-color 0.12s ease, color 0.12s ease, background 0.12s ease;
 }
-.pbtn:hover { border-color: var(--accent); }
-.pbtn.primary { background: var(--accent); color: var(--accent-contrast); border-color: var(--accent); }
-.pbtn[aria-pressed="true"] { background: var(--active-bg); border-color: var(--active-border); }
-.player label { font-size: 0.8rem; color: var(--text-muted); }
-.player select, .player input[type="range"] { font: inherit; }
+.pbtn:hover { border-color: var(--accent); color: var(--accent); }
+.pbtn.primary {
+  background: var(--accent); color: var(--on-accent); border-color: var(--accent);
+  min-width: 6rem; font-weight: 500;
+}
+.pbtn.primary:hover { background: var(--accent-hi); border-color: var(--accent-hi); color: var(--on-accent); }
+.pbtn[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.pbtn.danger:hover { border-color: var(--danger); color: var(--danger); }
+.player .now {
+  display: flex; flex-direction: column; gap: 0.4rem; flex: 1 1 13rem; min-width: 11rem;
+}
+#now-reading {
+  font-size: 0.8rem; color: var(--text-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+#seek { display: flex; gap: 0.25rem; }
+#seek .seg {
+  flex: 1; height: 5px; min-width: 0.5rem; border: 0; padding: 0; cursor: pointer;
+  border-radius: 3px; background: var(--border);
+  transition: background 0.16s ease, opacity 0.16s ease;
+}
+#seek .seg.done { background: var(--accent); }
+#seek .seg.current { background: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+#seek .seg:focus-visible { outline-offset: 3px; }
+.player label { font-size: 0.76rem; color: var(--text-muted); }
+.player select { font: inherit; font-size: 0.8rem; }
 .player select {
   background: var(--surface-2); color: var(--text);
-  border: 1px solid var(--border); border-radius: 8px; padding: 0.3rem 0.4rem; max-width: 12rem;
+  border: 1px solid var(--border-2); border-radius: 7px;
+  padding: 0.35rem 0.45rem; max-width: 11rem;
 }
-#scrubber-wrap { display: flex; align-items: center; gap: 0.4rem; min-width: 8rem; flex: 1; max-width: 24rem; }
-#scrubber { width: 100%; }
-#scrubber-label { font-size: 0.78rem; color: var(--text-muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.player select:focus { border-color: var(--accent); }
 
-/* ---- command palette (P3) ----------------------------------------- */
+/* ---- command palette ---------------------------------------------- */
 #palette-overlay {
   position: fixed; inset: 0; z-index: 90;
-  background: rgba(0,0,0,0.4);
+  background: rgba(20,19,17,0.34);
   display: flex; align-items: flex-start; justify-content: center;
-  padding-top: 12vh;
+  padding-top: 13vh;
 }
 #palette-overlay[hidden] { display: none; }
 #palette {
-  width: min(38rem, 92vw);
+  width: min(35rem, 92vw);
   background: var(--surface); border: 1px solid var(--border);
-  border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+  border-radius: 14px; box-shadow: 0 24px 60px rgba(0,0,0,0.28);
   overflow: hidden;
 }
 #palette-input {
-  width: 100%; font: inherit; font-size: 1rem;
-  padding: 0.9rem 1rem; border: 0; border-bottom: 1px solid var(--border);
+  width: 100%; font: inherit; font-size: 0.98rem;
+  padding: 0.95rem 1.05rem; border: 0; border-bottom: 1px solid var(--border);
   background: transparent; color: var(--text); outline: none;
 }
-#palette-list { list-style: none; margin: 0; padding: 0.35rem; max-height: 50vh; overflow-y: auto; }
+#palette-list { list-style: none; margin: 0; padding: 0.4rem; max-height: 46vh; overflow-y: auto; }
 #palette-list li {
-  padding: 0.55rem 0.7rem; border-radius: 8px; cursor: pointer;
+  padding: 0.6rem 0.75rem; border-radius: 9px; cursor: pointer;
   display: flex; align-items: center; gap: 0.6rem; font-size: 0.92rem;
 }
-#palette-list li[aria-selected="true"] { background: var(--active-bg); }
+#palette-list li[aria-selected="true"] { background: var(--accent-soft); }
 #palette-list .pl-kind {
   font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;
   letter-spacing: 0.05em; margin-left: auto;
@@ -282,12 +396,16 @@ main.plan tbody tr:nth-child(even) { background: var(--surface-2); }
 
 @media (prefers-reduced-motion: reduce) {
   * { scroll-behavior: auto !important; transition: none !important; }
+  .player { transition: none !important; }
 }
 
 @media (max-width: 820px) {
   .layout { grid-template-columns: 1fr; }
   nav.toc { display: none; }
-  .reading-wrap { padding: 1.25rem 1.1rem calc(var(--player-h) + 2rem); }
+  .reading-wrap { padding: 1.6rem 1.2rem calc(var(--player-h) + 2.5rem); }
+  header.app-header h1 { max-width: 55vw; }
+  #crumb { display: none; }
+  main.plan h1 { font-size: 2rem; }
 }
 </style>
 </head>
@@ -295,71 +413,91 @@ main.plan tbody tr:nth-child(even) { background: var(--surface-2); }
 <a class="skip-link" href="#plan-main">Skip to plan content</a>
 <div id="progress-bar" role="presentation"></div>
 
-<!-- polite live region for playback + section announcements (R1) -->
+<!-- polite live region for playback + section announcements -->
 <div id="live" class="visually-hidden" aria-live="polite" aria-atomic="true"></div>
 
 <header class="app-header">
-  <h1>Plan Reader</h1>
-  <div class="header-meta">
-    <span class="chip" id="readtime-chip">~ min read</span>
-    <span class="chip" id="ts-chip">captured —</span>
-    <span class="chip mono" id="cwd-chip">—</span>
-    <button class="hbtn" id="palette-open" aria-haspopup="dialog">⌘K Actions</button>
-    <button class="hbtn" id="theme-toggle" aria-pressed="false">Theme</button>
+  <div class="header-title">
+    <h1 id="plan-title">Plan Reader</h1>
+    <span id="crumb"></span>
+  </div>
+  <div class="header-actions">
+    <button class="hbtn primary" id="btn-listen">▶ Listen</button>
+    <button class="hbtn" id="btn-copy">Copy plan</button>
+    <button class="hbtn" id="palette-open" aria-haspopup="dialog">Actions <span class="kbd">⌘K</span></button>
+    <button class="hbtn" id="theme-toggle" aria-pressed="false" aria-label="Switch colour theme">Theme</button>
   </div>
 </header>
 
 <div id="capture-banner" role="alert" hidden>
-  ⚠ The most recent plan capture failed — showing the last good plan (or the dev sample). Re-run your plan and try <code>/readplan</code> again.
+  <strong>Showing the last good plan.</strong>
+  The most recent capture failed — re-run your plan and try <code>/read</code> again.
 </div>
 
 <div class="layout">
   <nav class="toc" aria-label="Table of contents">
-    <h2 id="toc-heading">On this page</h2>
-    <ol id="toc-list" aria-labelledby="toc-heading"></ol>
+    <div class="toc-search">
+      <span class="icon" aria-hidden="true">⌕</span>
+      <input id="toc-search" type="text" placeholder="Search this plan  /"
+             aria-label="Search this plan" autocomplete="off" />
+    </div>
+    <div class="toc-contents">
+      <h2 id="toc-heading">Contents</h2>
+      <ol id="toc-list" aria-labelledby="toc-heading"></ol>
+      <div id="toc-empty" hidden></div>
+    </div>
+    <div class="toc-foot">
+      <div class="read" id="meta-read">~ min read</div>
+      <div class="cwd" id="meta-cwd">—</div>
+    </div>
   </nav>
 
   <div class="reading-wrap">
+    <div class="eyebrow" id="eyebrow"></div>
     <main class="plan" id="plan-main" tabindex="-1" aria-label="Plan content"></main>
   </div>
 </div>
 
-<div class="player" role="region" aria-label="Read-aloud player">
-  <div class="group">
-    <button class="pbtn primary" id="btn-play" aria-label="Play read-aloud">▶ Play</button>
-    <button class="pbtn" id="btn-pause" aria-label="Pause read-aloud" disabled>⏸</button>
-    <button class="pbtn" id="btn-stop" aria-label="Stop read-aloud" disabled>⏹</button>
-  </div>
-  <div id="scrubber-wrap">
-    <input type="range" id="scrubber" min="0" max="0" value="0" step="1"
-           aria-label="Reading position" />
-    <span id="scrubber-label">0 / 0</span>
-  </div>
-  <div class="group">
-    <label for="rate">Speed</label>
-    <select id="rate" aria-label="Reading speed">
-      <option value="0.75">0.75×</option>
-      <option value="1" selected>1×</option>
-      <option value="1.25">1.25×</option>
-      <option value="1.5">1.5×</option>
-      <option value="1.75">1.75×</option>
-      <option value="2">2×</option>
-    </select>
-  </div>
-  <div class="group">
-    <label for="voice">Voice</label>
-    <select id="voice" aria-label="Voice"></select>
-  </div>
-  <div class="group">
-    <button class="pbtn" id="btn-readcode" aria-pressed="false"
-            aria-label="Read code blocks aloud">Skip code</button>
+<div class="player" id="player" role="region" aria-label="Read-aloud player">
+  <div class="player-inner">
+    <div class="group">
+      <button class="pbtn" id="btn-prev" aria-label="Previous section">⏮</button>
+      <button class="pbtn primary" id="btn-play" aria-label="Play read-aloud">▶ Play</button>
+      <button class="pbtn" id="btn-next" aria-label="Next section">⏭</button>
+    </div>
+    <div class="now">
+      <div id="now-reading">Ready to read</div>
+      <div id="seek" role="group" aria-label="Jump to section"></div>
+    </div>
+    <div class="group">
+      <label for="voice">Voice</label>
+      <select id="voice" aria-label="Voice"></select>
+    </div>
+    <div class="group">
+      <label for="rate">Speed</label>
+      <select id="rate" aria-label="Reading speed">
+        <option value="0.75">0.75×</option>
+        <option value="1" selected>1×</option>
+        <option value="1.25">1.25×</option>
+        <option value="1.5">1.5×</option>
+        <option value="1.75">1.75×</option>
+        <option value="2">2×</option>
+      </select>
+    </div>
+    <div class="group">
+      <button class="pbtn" id="btn-readcode" aria-pressed="false"
+              aria-label="Read code blocks aloud">Skip code</button>
+    </div>
+    <div class="group">
+      <button class="pbtn danger" id="btn-stop" aria-label="Stop read-aloud" disabled>Stop</button>
+    </div>
   </div>
 </div>
 
-<!-- command palette (P3) -->
+<!-- command palette -->
 <div id="palette-overlay" hidden>
   <div id="palette" role="dialog" aria-modal="true" aria-label="Command palette">
-    <input id="palette-input" type="text" placeholder="Jump to section, toggle theme, play…"
+    <input id="palette-input" type="text" placeholder="Jump to a section, play, switch theme…"
            aria-label="Command palette search" autocomplete="off" role="combobox"
            aria-expanded="true" aria-controls="palette-list" aria-activedescendant="" />
     <ul id="palette-list" role="listbox" aria-label="Actions"></ul>
@@ -411,9 +549,8 @@ main.plan tbody tr:nth-child(even) { background: var(--surface-2); }
   // that capture-plan.js prepends, so it does not render as content.
   rawMarkdown = rawMarkdown.replace(/^<!--\s*plan-reader capture[\s\S]*?-->\s*/, "");
 
-  // ---- meta chips --------------------------------------------------
-  document.getElementById("cwd-chip").textContent = cwd;
-  document.getElementById("ts-chip").textContent = "captured " + ts;
+  // ---- meta --------------------------------------------------------
+  document.getElementById("meta-cwd").textContent = cwd;
   if (!captureOk) document.getElementById("capture-banner").hidden = false;
 
   // ---- render markdown --------------------------------------------
@@ -439,10 +576,25 @@ main.plan tbody tr:nth-child(even) { background: var(--surface-2); }
     el.setAttribute("tabindex", "0");
   });
 
-  // read-time chip (P2): ~200 wpm
+  // ---- header title (from first H1) + eyebrow meta ----------------
+  var firstH1 = main.querySelector("h1");
+  var planTitle = firstH1 ? firstH1.textContent.trim() : "Plan Reader";
+  document.getElementById("plan-title").textContent = planTitle;
+  document.title = planTitle === "Plan Reader" ? "Plan Reader" : planTitle + " · Plan Reader";
+
+  // read-time: ~200 wpm
   var words = (main.textContent.match(/\S+/g) || []).length;
   var minutes = Math.max(1, Math.round(words / 200));
-  document.getElementById("readtime-chip").textContent = "~" + minutes + " min read";
+
+  var eyebrowBits = [];
+  if (cwd && cwd !== "unknown") eyebrowBits.push(cwd);
+  if (ts && ts !== "unknown" && ts !== "dev build") {
+    var d = new Date(ts);
+    eyebrowBits.push(isNaN(d.getTime()) ? "captured " + ts : "captured " + d.toLocaleString());
+  } else if (ts === "dev build") {
+    eyebrowBits.push("dev build");
+  }
+  document.getElementById("eyebrow").textContent = "Plan" + (eyebrowBits.length ? " · " + eyebrowBits.join(" · ") : "");
 
   // ---- slugify + heading ids --------------------------------------
   var usedIds = {};
@@ -458,17 +610,26 @@ main.plan tbody tr:nth-child(even) { background: var(--surface-2); }
   var headings = Array.prototype.slice.call(main.querySelectorAll("h1, h2, h3, h4"));
   headings.forEach(function (h) { if (!h.id) h.id = slugify(h.textContent); });
 
-  // ---- build the TOC (P1) -----------------------------------------
+  // ---- build the TOC ----------------------------------------------
   var tocList = document.getElementById("toc-list");
-  headings.forEach(function (h) {
+  var tocEmpty = document.getElementById("toc-empty");
+  var tocSearch = document.getElementById("toc-search");
+  var visibleHeadings = headings.filter(function (h) { return parseInt(h.tagName.substring(1), 10) <= 4; });
+  visibleHeadings.forEach(function (h, i) {
     var level = parseInt(h.tagName.substring(1), 10);
-    if (level > 4) return;
     var li = document.createElement("li");
     var a = document.createElement("a");
     a.href = "#" + h.id;
-    a.textContent = h.textContent;
     a.className = "lvl-" + level;
     a.dataset.target = h.id;
+    var num = document.createElement("span");
+    num.className = "num";
+    num.textContent = String(i + 1).padStart(2, "0");
+    var label = document.createElement("span");
+    label.className = "label";
+    label.textContent = h.textContent;
+    a.appendChild(num);
+    a.appendChild(label);
     a.addEventListener("click", function (ev) {
       ev.preventDefault();
       jumpToHeading(h.id, true);
@@ -478,6 +639,23 @@ main.plan tbody tr:nth-child(even) { background: var(--surface-2); }
   });
   var tocLinks = Array.prototype.slice.call(tocList.querySelectorAll("a"));
 
+  // TOC search filter
+  tocSearch.addEventListener("input", function () {
+    var q = tocSearch.value.trim().toLowerCase();
+    var anyShown = false;
+    tocLinks.forEach(function (a) {
+      var match = !q || a.textContent.toLowerCase().indexOf(q) !== -1;
+      a.parentNode.hidden = !match;
+      if (match) anyShown = true;
+    });
+    if (q && !anyShown) {
+      tocEmpty.textContent = "Nothing matches “" + tocSearch.value.trim() + "”.";
+      tocEmpty.hidden = false;
+    } else {
+      tocEmpty.hidden = true;
+    }
+  });
+
   function jumpToHeading(id, focus) {
     var el = document.getElementById(id);
     if (!el) return;
@@ -485,13 +663,17 @@ main.plan tbody tr:nth-child(even) { background: var(--surface-2); }
     if (focus) { el.setAttribute("tabindex", "-1"); el.focus({ preventScroll: true }); }
   }
 
-  // ---- scroll-spy via IntersectionObserver (P1) -------------------
+  // ---- scroll-spy via IntersectionObserver ------------------------
+  var crumb = document.getElementById("crumb");
+  var headingText = {};
+  headings.forEach(function (h) { headingText[h.id] = h.textContent.trim(); });
   var currentHeadingId = headings.length ? headings[0].id : null;
   function setCurrent(id) {
     currentHeadingId = id;
     tocLinks.forEach(function (a) {
       a.setAttribute("aria-current", a.dataset.target === id ? "true" : "false");
     });
+    if (id && headingText[id]) crumb.textContent = headingText[id];
   }
   if ("IntersectionObserver" in window && headings.length) {
     var spy = new IntersectionObserver(function (entries) {
@@ -503,7 +685,11 @@ main.plan tbody tr:nth-child(even) { background: var(--surface-2); }
   }
   setCurrent(currentHeadingId);
 
-  // ---- reading progress bar (P2) ----------------------------------
+  // read-time + cwd in the nav footer
+  document.getElementById("meta-read").textContent =
+    "~" + minutes + " min read · " + visibleHeadings.length + " section" + (visibleHeadings.length === 1 ? "" : "s");
+
+  // ---- reading progress bar ---------------------------------------
   var progressBar = document.getElementById("progress-bar");
   function updateProgress() {
     var doc = document.documentElement;
@@ -514,32 +700,13 @@ main.plan tbody tr:nth-child(even) { background: var(--surface-2); }
   window.addEventListener("scroll", updateProgress, { passive: true });
   updateProgress();
 
-  // Keep the reading column's bottom padding + TOC height in sync with the
-  // player bar's real height, which grows when the controls wrap onto extra
-  // rows at narrow widths. No feedback loop: --player-h drives content padding
-  // and TOC height only, never the player's own (literal min-height) size.
-  var playerEl = document.querySelector(".player");
-  function syncPlayerHeight() {
-    document.documentElement.style.setProperty("--player-h", playerEl.offsetHeight + "px");
-  }
-  syncPlayerHeight();
-  // ResizeObserver catches every height change — viewport resize, font load, and
-  // late voice-picker population that widens the bar into a wrapped state.
-  if ("ResizeObserver" in window) {
-    new ResizeObserver(syncPlayerHeight).observe(playerEl);
-  } else {
-    window.addEventListener("resize", syncPlayerHeight);
-  }
-
   // =================================================================
-  // R2 — build the speakable transcript, decoupled from visual DOM.
+  // Build the speakable transcript, decoupled from visual DOM.
   // We walk block elements in document order and produce an ordered
   // list of utterances, each linked to a DOM node to highlight.
   // =================================================================
   function endsSentence(text) { return /[.!?]["')\]]?\s*$/.test(text); }
 
-  // Split raw text into sentence-ish segments, PRESERVING whitespace so the
-  // rendered DOM keeps its original spacing. Spoken text is trimmed later.
   function rawSentenceSegments(text) {
     if (typeof Intl !== "undefined" && Intl.Segmenter) {
       try {
@@ -552,9 +719,6 @@ main.plan tbody tr:nth-child(even) { background: var(--surface-2); }
     return text.match(/[^.!?]+[.!?]*\s*/g) || [text];
   }
 
-  // Wrap each sentence of an inline-bearing block in a <span> so it can be
-  // highlighted as it is read, while preserving inline formatting (links read
-  // as their text, inline code read plainly) and the original whitespace.
   function wrapSentences(blockEl, units) {
     var children = Array.prototype.slice.call(blockEl.childNodes);
     blockEl.textContent = "";
@@ -581,25 +745,20 @@ main.plan tbody tr:nth-child(even) { background: var(--surface-2); }
           if (endsSentence(seg)) { flushUnit(); newSpan(); }
         });
       } else {
-        // inline element (a, code, strong, em…) — keep it atomic in the
-        // current sentence; its spoken text is its textContent. Surrounding
-        // text nodes already carry the needed spaces.
         currentSpan.appendChild(node);
         buffer += node.textContent;
       }
     });
     flushUnit();
-    // remove a trailing empty span if the block ended on a sentence boundary
     if (currentSpan && !currentSpan.textContent.trim()) blockEl.removeChild(currentSpan);
   }
 
-  var transcript = []; // { text, el, kind }
+  var transcript = []; // { text, el, kind, headingId? }
 
   function levelWord(n) {
     return ["", "Title", "Section", "Subsection", "Sub-subsection"][n] || "Section";
   }
 
-  // Walk only the direct block children of <main> in order.
   Array.prototype.slice.call(main.children).forEach(function (el) {
     var tag = el.tagName.toLowerCase();
     if (/^h[1-6]$/.test(tag)) {
@@ -638,6 +797,52 @@ main.plan tbody tr:nth-child(even) { background: var(--surface-2); }
     }
   });
 
+  // ---- code cards: mono bar with language + copy (cosmetic) -------
+  // Runs AFTER the transcript walk (which needs <pre> as direct children of
+  // <main>); wrapping keeps the same node references, so highlight/scroll and
+  // the code-announcement transcript units are unaffected.
+  function langOf(codeEl) {
+    var m = (codeEl.className || "").match(/language-([\w-]+)/);
+    if (m) return m[1];
+    var cls = Array.prototype.slice.call(codeEl.classList || []);
+    var known = cls.filter(function (c) { return c !== "hljs" && !/^language-/.test(c); });
+    return known[0] || "code";
+  }
+  main.querySelectorAll("pre").forEach(function (pre) {
+    var codeEl = pre.querySelector("code") || pre;
+    var wrap = document.createElement("div");
+    wrap.className = "code-wrap";
+    var bar = document.createElement("div");
+    bar.className = "code-bar";
+    var lang = document.createElement("span");
+    lang.className = "code-lang";
+    lang.textContent = langOf(codeEl);
+    var spacer = document.createElement("span");
+    spacer.className = "spacer";
+    var copyBtn = document.createElement("button");
+    copyBtn.type = "button";
+    copyBtn.className = "code-copy";
+    copyBtn.textContent = "Copy";
+    copyBtn.addEventListener("click", function () {
+      if (navigator.clipboard) navigator.clipboard.writeText(codeEl.textContent);
+      copyBtn.textContent = "Copied";
+      announce("Code copied to clipboard.");
+      setTimeout(function () { copyBtn.textContent = "Copy"; }, 1500);
+    });
+    bar.appendChild(lang); bar.appendChild(spacer); bar.appendChild(copyBtn);
+    pre.parentNode.insertBefore(wrap, pre);
+    wrap.appendChild(bar);
+    wrap.appendChild(pre);
+  });
+
+  // =================================================================
+  // Sections (heading-anchored) for the player's seek + prev/next.
+  // =================================================================
+  var sections = []; // { title, idx (transcript index) }
+  transcript.forEach(function (u, i) {
+    if (u.kind === "heading") sections.push({ title: (headingText[u.headingId] || u.text), idx: i, headingId: u.headingId });
+  });
+
   // =================================================================
   // TTS engine (Web Speech API)
   // =================================================================
@@ -652,21 +857,74 @@ main.plan tbody tr:nth-child(even) { background: var(--surface-2); }
   var live = document.getElementById("live");
   function announce(msg) { live.textContent = msg; }
 
+  var player = document.getElementById("player");
+  var btnPrev = document.getElementById("btn-prev");
   var btnPlay = document.getElementById("btn-play");
-  var btnPause = document.getElementById("btn-pause");
+  var btnNext = document.getElementById("btn-next");
   var btnStop = document.getElementById("btn-stop");
   var btnReadCode = document.getElementById("btn-readcode");
+  var btnListen = document.getElementById("btn-listen");
   var rateSel = document.getElementById("rate");
   var voiceSel = document.getElementById("voice");
-  var scrubber = document.getElementById("scrubber");
-  var scrubberLabel = document.getElementById("scrubber-label");
+  var nowReading = document.getElementById("now-reading");
+  var seekWrap = document.getElementById("seek");
 
-  scrubber.max = String(Math.max(0, transcript.length - 1));
-  function updateScrubber() {
-    scrubber.value = String(idx);
-    scrubberLabel.textContent = (transcript.length ? (idx + 1) : 0) + " / " + transcript.length;
+  // ---- player show/hide (slide-up) + height sync ------------------
+  function syncPlayerHeight() {
+    var h = player.classList.contains("open") ? player.offsetHeight : 0;
+    document.documentElement.style.setProperty("--player-h", h + "px");
   }
-  updateScrubber();
+  function showPlayer() {
+    if (!player.classList.contains("open")) {
+      player.classList.add("open");
+      syncPlayerHeight();
+    }
+  }
+  function hidePlayer() {
+    player.classList.remove("open");
+    document.documentElement.style.setProperty("--player-h", "0px");
+  }
+  if ("ResizeObserver" in window) {
+    new ResizeObserver(syncPlayerHeight).observe(player);
+  } else {
+    window.addEventListener("resize", syncPlayerHeight);
+  }
+
+  // ---- seek segments (one per section) ----------------------------
+  var seekSegs = [];
+  function buildSeek() {
+    seekWrap.innerHTML = "";
+    seekSegs = sections.map(function (s, i) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "seg";
+      b.setAttribute("aria-label", "Jump to " + s.title);
+      b.addEventListener("click", function () { jumpToSection(i); });
+      seekWrap.appendChild(b);
+      return b;
+    });
+  }
+  buildSeek();
+
+  function currentSectionIndex() {
+    var si = 0;
+    for (var i = 0; i < sections.length; i++) {
+      if (sections[i].idx <= idx) si = i; else break;
+    }
+    return si;
+  }
+  function updateSectionUI() {
+    var si = currentSectionIndex();
+    seekSegs.forEach(function (b, i) {
+      b.classList.toggle("done", i < si);
+      b.classList.toggle("current", i === si);
+    });
+    if (sections.length) {
+      nowReading.textContent = "Section " + (si + 1) + " of " + sections.length + " — " + sections[si].title;
+    } else {
+      nowReading.textContent = state === "stopped" ? "Ready to read" : "Reading";
+    }
+  }
 
   function clearHighlight() {
     var prev = main.querySelector(".tts-active");
@@ -689,20 +947,19 @@ main.plan tbody tr:nth-child(even) { background: var(--surface-2); }
 
   function setButtons() {
     var playing = state === "playing";
-    var paused = state === "paused";
-    btnPlay.disabled = playing;
-    btnPause.disabled = !(playing || paused);
-    btnStop.disabled = state === "stopped";
-    btnPause.textContent = paused ? "▶ Resume" : "⏸";
-    btnPlay.setAttribute("aria-label", playing ? "Playing" : "Play read-aloud");
+    var stopped = state === "stopped";
+    btnPlay.innerHTML = playing ? "⏸ Pause" : (state === "paused" ? "▶ Resume" : "▶ Play");
+    btnPlay.setAttribute("aria-label", playing ? "Pause read-aloud" : "Play read-aloud");
+    btnStop.disabled = stopped;
+    btnListen.innerHTML = playing ? "❚❚ Listening" : "▶ Listen";
   }
 
   function speakCurrent() {
     if (!ttsSupported || idx >= transcript.length) { stop(); return; }
     var unit = transcript[idx];
     highlight(unit);
-    updateScrubber();
-    if (unit.kind === "heading") announce(unit.text);
+    updateSectionUI();
+    if (unit.kind === "heading") { announce(unit.text); setCurrent(unit.headingId); }
 
     var u = new SpeechSynthesisUtterance(spokenTextFor(unit));
     u.rate = rate;
@@ -717,12 +974,14 @@ main.plan tbody tr:nth-child(even) { background: var(--surface-2); }
   }
 
   function play() {
-    if (!ttsSupported) { announce("Text-to-speech is not available in this browser."); return; }
+    if (!ttsSupported) { announce("Text-to-speech is not available in this browser."); showPlayer(); return; }
     if (!transcript.length) return;
+    showPlayer();
     if (state === "paused") { synth.resume(); state = "playing"; setButtons(); announce("Resumed."); return; }
     synth.cancel();
     state = "playing";
     setButtons();
+    updateSectionUI();
     announce("Playing.");
     speakCurrent();
   }
@@ -730,12 +989,27 @@ main.plan tbody tr:nth-child(even) { background: var(--surface-2); }
     if (state === "playing") { synth.pause(); state = "paused"; setButtons(); announce("Paused."); }
     else if (state === "paused") { play(); }
   }
+  function togglePlay() {
+    if (state === "playing") pause(); else play();
+  }
   function stop() {
     if (ttsSupported) synth.cancel();
     state = "stopped";
+    idx = 0;
     clearHighlight();
     setButtons();
+    updateSectionUI();
     announce("Stopped.");
+    hidePlayer();
+  }
+  function jumpToSection(i) {
+    if (!sections.length) return;
+    var s = sections[Math.max(0, Math.min(sections.length - 1, i))];
+    idx = s.idx;
+    showPlayer();
+    if (state === "playing") synth.cancel();
+    state = "stopped";
+    play();
   }
   function playFromHeading(headingId) {
     for (var i = 0; i < transcript.length; i++) {
@@ -746,9 +1020,11 @@ main.plan tbody tr:nth-child(even) { background: var(--surface-2); }
     play();
   }
 
-  btnPlay.addEventListener("click", play);
-  btnPause.addEventListener("click", pause);
+  btnPrev.addEventListener("click", function () { jumpToSection(currentSectionIndex() - 1); });
+  btnPlay.addEventListener("click", togglePlay);
+  btnNext.addEventListener("click", function () { jumpToSection(currentSectionIndex() + 1); });
   btnStop.addEventListener("click", stop);
+  btnListen.addEventListener("click", togglePlay);
   btnReadCode.addEventListener("click", function () {
     readCode = !readCode;
     btnReadCode.setAttribute("aria-pressed", String(readCode));
@@ -757,12 +1033,6 @@ main.plan tbody tr:nth-child(even) { background: var(--surface-2); }
   });
   rateSel.addEventListener("change", function () {
     rate = parseFloat(rateSel.value);
-    if (state === "playing") { synth.cancel(); speakCurrent(); }
-  });
-  scrubber.addEventListener("input", function () {
-    idx = parseInt(scrubber.value, 10) || 0;
-    highlight(transcript[idx]);
-    updateScrubber();
     if (state === "playing") { synth.cancel(); speakCurrent(); }
   });
 
@@ -791,9 +1061,20 @@ main.plan tbody tr:nth-child(even) { background: var(--surface-2); }
     populateVoices();
     if (typeof synth.onvoiceschanged !== "undefined") synth.onvoiceschanged = populateVoices;
   } else {
-    [btnPlay, btnPause, btnStop, rateSel, voiceSel].forEach(function (el) { el.disabled = true; });
+    [btnPrev, btnPlay, btnNext, btnStop, rateSel, voiceSel, btnReadCode].forEach(function (el) { el.disabled = true; });
     announce("Text-to-speech is not supported in this browser.");
   }
+  setButtons();
+  updateSectionUI();
+
+  // ---- copy whole plan --------------------------------------------
+  var btnCopy = document.getElementById("btn-copy");
+  btnCopy.addEventListener("click", function () {
+    if (navigator.clipboard) navigator.clipboard.writeText(rawMarkdown);
+    btnCopy.textContent = "Copied";
+    announce("Plan copied to clipboard.");
+    setTimeout(function () { btnCopy.textContent = "Copy plan"; }, 1600);
+  });
 
   // =================================================================
   // Theme toggle
@@ -807,7 +1088,7 @@ main.plan tbody tr:nth-child(even) { background: var(--surface-2); }
   function applyTheme(theme) {
     document.documentElement.setAttribute("data-theme", theme);
     themeToggle.setAttribute("aria-pressed", String(theme === "dark"));
-    themeToggle.textContent = theme === "dark" ? "☀ Light" : "🌙 Dark";
+    themeToggle.textContent = theme === "dark" ? "☀ Light" : "☾ Dark";
   }
   themeToggle.addEventListener("click", function () {
     applyTheme(currentTheme() === "dark" ? "light" : "dark");
@@ -815,7 +1096,7 @@ main.plan tbody tr:nth-child(even) { background: var(--surface-2); }
   applyTheme(currentTheme());
 
   // =================================================================
-  // P3 — command palette
+  // Command palette
   // =================================================================
   var overlay = document.getElementById("palette-overlay");
   var paletteInput = document.getElementById("palette-input");
@@ -826,13 +1107,13 @@ main.plan tbody tr:nth-child(even) { background: var(--surface-2); }
 
   function buildActions() {
     var actions = [
-      { label: "Play read-aloud", kind: "playback", run: play },
-      { label: "Pause / resume read-aloud", kind: "playback", run: pause },
+      { label: "Play / pause read-aloud", kind: "playback", run: togglePlay },
       { label: "Stop read-aloud", kind: "playback", run: stop },
       { label: "Toggle theme (light / dark)", kind: "view", run: function () { themeToggle.click(); } },
       { label: "Toggle read code aloud", kind: "playback", run: function () { btnReadCode.click(); } },
       { label: "Faster (increase speed)", kind: "playback", run: function () { stepRate(1); } },
-      { label: "Slower (decrease speed)", kind: "playback", run: function () { stepRate(-1); } }
+      { label: "Slower (decrease speed)", kind: "playback", run: function () { stepRate(-1); } },
+      { label: "Copy the whole plan", kind: "clipboard", run: function () { btnCopy.click(); } }
     ];
     headings.forEach(function (h) {
       actions.push({
@@ -933,22 +1214,30 @@ main.plan tbody tr:nth-child(even) { background: var(--surface-2); }
       return;
     }
     if (!overlay.hidden) return; // palette handles its own keys
+    if (e.key === "/" && !inField) { e.preventDefault(); tocSearch.focus(); return; }
     if (inField) return;
-    if (e.key === " " || e.key === "k") { e.preventDefault(); (state === "playing") ? pause() : play(); }
+    if (e.key === " " || e.key === "k") { e.preventDefault(); togglePlay(); }
     else if (e.key === "Escape") { stop(); }
   });
 
-  // expose a tiny hook for automated a11y tests (non-enumerable-ish)
+  // expose a tiny hook for automated a11y tests
   window.__planReader = {
     headingCount: headings.length,
     tocCount: tocLinks.length,
     transcriptLength: transcript.length,
+    sectionCount: sections.length,
     ttsSupported: ttsSupported,
     codeUnits: transcript.filter(function (u) { return u.kind === "code"; }).length,
     firstCodeUtterance: (transcript.find(function (u) { return u.kind === "code"; }) || {}).text || null,
     openPalette: openPalette,
     closePalette: closePalette,
-    isPaletteOpen: function () { return !overlay.hidden; }
+    isPaletteOpen: function () { return !overlay.hidden; },
+    showPlayer: showPlayer,
+    hidePlayer: hidePlayer,
+    isPlayerOpen: function () { return player.classList.contains("open"); },
+    play: play,
+    pause: pause,
+    stop: stop
   };
 })();
 </script>

@@ -7,6 +7,10 @@
 // column's bottom padding in sync with the bar's real height.
 // Found by /qa on 2026-08-10
 // Report: .gstack/qa-reports/qa-report-plan-reader-2026-08-10.md
+//
+// The player now slides up on demand rather than being always-visible, so each
+// test reveals it first and then asserts the same intent: once shown, no
+// control clips at narrow widths and the reading column clears the bar.
 
 const { test, before, after } = require('node:test');
 const assert = require('node:assert');
@@ -45,7 +49,7 @@ before(async () => {
 
 after(async () => { if (browser) await browser.close(); });
 
-const CONTROLS = ['btn-play', 'btn-pause', 'btn-stop', 'scrubber', 'rate', 'voice', 'btn-readcode'];
+const CONTROLS = ['btn-prev', 'btn-play', 'btn-next', 'btn-stop', 'rate', 'voice', 'btn-readcode'];
 
 for (const width of [700, 375]) {
   test(`no player control is clipped off-screen at ${width}px wide`, async (t) => {
@@ -54,8 +58,10 @@ for (const width of [700, 375]) {
     const page = await context.newPage();
     await page.goto(htmlUrl, { waitUntil: 'load' });
     await page.waitForFunction(() => !!window.__planReader);
-    // allow late voice-population + ResizeObserver to settle the wrapped height
-    await page.waitForTimeout(200);
+    // Reveal the slide-up player, then allow the transition + late
+    // voice-population + ResizeObserver to settle the wrapped height.
+    await page.evaluate(() => window.__planReader.showPlayer());
+    await page.waitForTimeout(400);
 
     const clipped = await page.evaluate((ids) => {
       const vw = window.innerWidth, vh = window.innerHeight;

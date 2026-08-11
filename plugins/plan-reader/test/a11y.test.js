@@ -71,11 +71,13 @@ test('TOC entry count equals heading count (P1)', async (t) => {
 
 test('player controls are present and keyboard-focusable (R1)', async (t) => {
   if (!chromium) return t.skip('playwright not installed');
-  for (const id of ['btn-play', 'btn-pause', 'btn-stop', 'rate', 'voice', 'btn-readcode', 'scrubber']) {
+  for (const id of ['btn-prev', 'btn-play', 'btn-next', 'btn-stop', 'rate', 'voice', 'btn-readcode']) {
     const exists = await page.$(`#${id}`);
     assert.ok(exists, `control #${id} exists`);
   }
-  // Focus the play button directly and confirm it takes focus.
+  // The player slides up on demand; reveal it, then confirm Play takes focus.
+  await page.evaluate(() => window.__planReader.showPlayer());
+  await page.waitForTimeout(50);
   await page.focus('#btn-play');
   const active = await page.evaluate(() => document.activeElement.id);
   assert.strictEqual(active, 'btn-play', 'play button is focusable');
